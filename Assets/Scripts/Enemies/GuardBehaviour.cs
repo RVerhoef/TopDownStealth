@@ -6,7 +6,9 @@ public class GuardBehaviour : MonoBehaviour
 {
     public State currentState;
 
-    public GameObject Player;
+    private GameObject _player;
+    public Vector3 _lastKnownPosition;
+    private float _speed = 1;
 
 	void Start ()
     {
@@ -44,18 +46,29 @@ public class GuardBehaviour : MonoBehaviour
 
     void Patrol()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.up, 100);
-        Debug.DrawRay(transform.position, Vector2.up, Color.green);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
         if (hit.collider.gameObject.tag == "Player")
         {
-            Debug.Log("I see you!");
+            _player = hit.collider.gameObject;
             SetCurrentState(State.ALERT);
         }
     }
 
     void Alert()
     {
-
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
+        if (hit.collider.gameObject.tag == "Player")
+        {
+            float step = _speed * Time.deltaTime;
+            transform.position = Vector2.MoveTowards(transform.position, _player.transform.position, step);
+            transform.rotation = Quaternion.LookRotation(Vector3.forward, _player.transform.position - transform.position);
+        }
+        else
+        {
+            _lastKnownPosition = _player.transform.position;
+            _player = null;
+            SetCurrentState(State.INVESTIGATE);
+        }
     }
 
     void Arrest()
@@ -65,7 +78,16 @@ public class GuardBehaviour : MonoBehaviour
 
     void Investigate()
     {
+        float step = _speed * Time.deltaTime;
+        transform.position = Vector2.MoveTowards(transform.position, _lastKnownPosition, step);
+        transform.rotation = Quaternion.LookRotation(Vector3.forward, _lastKnownPosition - transform.position);
 
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
+        if (hit.collider.gameObject.tag == "Player")
+        {
+            _player = hit.collider.gameObject;
+            SetCurrentState(State.ALERT);
+        }
     }
 
     public enum State
