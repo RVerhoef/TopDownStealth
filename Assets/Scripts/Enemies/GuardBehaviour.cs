@@ -8,9 +8,13 @@ public class GuardBehaviour : MonoBehaviour
 
     private GameObject _player;
     public Vector3 _lastKnownPosition;
-    private float _speed = 1;
+    public Transform[] wayPoints;
+    public Transform nextWaypoint;
+    private float _patrolSpeed = 1;
+    private float _chaseSpeed = 2;
+    public int i = 0;
 
-	void Start ()
+    void Start ()
     {
         SetCurrentState(State.PATROL);
     }
@@ -46,6 +50,23 @@ public class GuardBehaviour : MonoBehaviour
 
     void Patrol()
     {
+
+        if (transform.position != nextWaypoint.position)
+        {
+            float step = _patrolSpeed * Time.deltaTime;
+            transform.position = Vector2.MoveTowards(transform.position, nextWaypoint.position, step);
+            transform.rotation = Quaternion.LookRotation(Vector3.forward, nextWaypoint.position - transform.position);
+        }
+        else if (transform.position == nextWaypoint.position && i != wayPoints.Length)
+        {
+            i++;
+            nextWaypoint.position = wayPoints[i].position;
+        }
+        else if (i >= wayPoints.Length)
+        {
+            i = 0;
+        }
+        
         RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
         if (hit.collider.gameObject.tag == "Player")
         {
@@ -59,11 +80,11 @@ public class GuardBehaviour : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
         if (hit.collider.gameObject.tag == "Player")
         {
-            float step = _speed * Time.deltaTime;
+            float step = _chaseSpeed * Time.deltaTime;
             transform.position = Vector2.MoveTowards(transform.position, _player.transform.position, step);
             transform.rotation = Quaternion.LookRotation(Vector3.forward, _player.transform.position - transform.position);
         }
-        else
+        else if (hit.collider.gameObject.tag != "Player")
         {
             _lastKnownPosition = _player.transform.position;
             _player = null;
@@ -78,9 +99,14 @@ public class GuardBehaviour : MonoBehaviour
 
     void Investigate()
     {
-        float step = _speed * Time.deltaTime;
+        float step = _patrolSpeed * Time.deltaTime;
         transform.position = Vector2.MoveTowards(transform.position, _lastKnownPosition, step);
         transform.rotation = Quaternion.LookRotation(Vector3.forward, _lastKnownPosition - transform.position);
+
+        if(transform.position == _lastKnownPosition)
+        {
+
+        }
 
         RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
         if (hit.collider.gameObject.tag == "Player")
