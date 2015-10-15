@@ -7,22 +7,23 @@ public class GuardBehaviour : MonoBehaviour
     public State currentState;
 
     private GameObject _player;
-    public Vector3 _lastKnownPosition;
-    public Transform[] wayPoints;
+    private Vector3 _lastKnownPosition;
+    public Transform[] waypoints;
     public Transform nextWaypoint;
     private float _patrolSpeed = 1;
     private float _chaseSpeed = 2;
     public int i = 0;
+    public bool _patrolCompleted = false;
 
-    void Start ()
+    void Start()
     {
         SetCurrentState(State.PATROL);
     }
 
-	void FixedUpdate ()
+    void FixedUpdate()
     {
         StateSwitcher();
-	}
+    }
 
     void SetCurrentState(State state)
     {
@@ -57,16 +58,25 @@ public class GuardBehaviour : MonoBehaviour
             transform.position = Vector2.MoveTowards(transform.position, nextWaypoint.position, step);
             transform.rotation = Quaternion.LookRotation(Vector3.forward, nextWaypoint.position - transform.position);
         }
-        else if (transform.position == nextWaypoint.position && i != wayPoints.Length)
+        else if (transform.position == nextWaypoint.position && i != waypoints.Length && _patrolCompleted == false)
         {
             i++;
-            nextWaypoint.position = wayPoints[i].position;
+            nextWaypoint.position = waypoints[i].position;
         }
-        else if (i >= wayPoints.Length)
+        else if (transform.position == nextWaypoint.position && i != 0 && _patrolCompleted == true)
         {
-            i = 0;
+            i--;
+            nextWaypoint.position = waypoints[i].position;
         }
-        
+        else if (i >= waypoints.Length)
+        {
+            _patrolCompleted = true;
+        }
+        else if (i == 0)
+        {
+            _patrolCompleted = false;
+        }
+
         RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, 5, 1);
         if (hit.collider.gameObject.tag == "Player")
         {
@@ -103,7 +113,7 @@ public class GuardBehaviour : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, _lastKnownPosition, step);
         transform.rotation = Quaternion.LookRotation(Vector3.forward, _lastKnownPosition - transform.position);
 
-        if(transform.position == _lastKnownPosition)
+        if (transform.position == _lastKnownPosition)
         {
 
         }
