@@ -9,15 +9,16 @@ public class GuardBehaviour : MonoBehaviour
     private GameObject _player;
     private Vector3 _lastKnownPosition;
     public Transform[] waypoints;
-    public Transform nextWaypoint;
+    private Transform _nextWaypoint;
     private float _patrolSpeed = 1;
     private float _chaseSpeed = 2;
     public int i = 0;
-    public bool _patrolCompleted = false;
+    private bool _patrolCompleted = false;
 
     void Start()
     {
         SetCurrentState(State.PATROL);
+        _nextWaypoint = waypoints[0];
     }
 
     void FixedUpdate()
@@ -52,27 +53,27 @@ public class GuardBehaviour : MonoBehaviour
     void Patrol()
     {
 
-        if (transform.position != nextWaypoint.position)
+        if (transform.position != _nextWaypoint.position)
         {
             float step = _patrolSpeed * Time.deltaTime;
-            transform.position = Vector2.MoveTowards(transform.position, nextWaypoint.position, step);
-            transform.rotation = Quaternion.LookRotation(Vector3.forward, nextWaypoint.position - transform.position);
+            transform.position = Vector2.MoveTowards(transform.position, _nextWaypoint.position, step);
+            transform.rotation = Quaternion.LookRotation(Vector3.forward, _nextWaypoint.position - transform.position);
         }
-        else if (transform.position == nextWaypoint.position && i != waypoints.Length && _patrolCompleted == false)
+        else if (transform.position == _nextWaypoint.position && i != waypoints.Length && _patrolCompleted == false)
         {
             i++;
-            nextWaypoint.position = waypoints[i].position;
+            _nextWaypoint = waypoints[i];
         }
-        else if (transform.position == nextWaypoint.position && i != 0 && _patrolCompleted == true)
+        else if (transform.position == _nextWaypoint.position && i != 0 && _patrolCompleted == true)
         {
             i--;
-            nextWaypoint.position = waypoints[i].position;
+            _nextWaypoint = waypoints[i];
         }
-        else if (i >= waypoints.Length)
+        else if (transform.position == _nextWaypoint.position && _nextWaypoint.name == "Waypoint" + waypoints.Length)
         {
             _patrolCompleted = true;
         }
-        else if (i == 0)
+        else if (transform.position == _nextWaypoint.position && _nextWaypoint.name == "Waypoint1")
         {
             _patrolCompleted = false;
         }
